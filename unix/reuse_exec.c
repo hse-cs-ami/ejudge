@@ -1955,6 +1955,9 @@ task_Start(tTask *tsk)
 
     if (tsk->ignore_sigpipe) {
       signal(SIGPIPE, SIG_IGN);
+    } else {
+      // SIGPIPE may have been ignored in parent process (e.g. ejudge-super-run)
+      signal(SIGPIPE, SIG_DFL);
     }
 
     if (tsk->enable_suid_exec) {
