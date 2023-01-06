@@ -729,17 +729,18 @@ collect_telegram_reminder(
   int r_beg = run_get_first(cs->runlog_state);
   int r_tot = run_get_total(cs->runlog_state);
   const struct run_entry *runs = run_get_entries_ptr(cs->runlog_state);
-  time_t old_time = cs->current_time - 2 * 24 * 60 * 60;
+  time_t clar_old_time = cs->current_time - 2 * 24 * 60 * 60;  // TODO get from contest config.
+  time_t pr_old_time = cs->current_time - 10 * 24 * 60 * 60;
 
   for (int run_id = r_beg; run_id < r_tot; ++run_id) {
     const struct run_entry *run = runs + run_id;
     if (run->status == RUN_PENDING_REVIEW) {
       ++pdata->pr_total;
-      if (run->time < old_time)
+      if (run->time < pr_old_time)
         ++pdata->pr_too_old;
     }
   }
-  pdata->unans_clars = clar_get_unanswered_count(cs->clarlog_state, old_time);
+  pdata->unans_clars = clar_get_unanswered_count(cs->clarlog_state, clar_old_time);
 }
 
 void

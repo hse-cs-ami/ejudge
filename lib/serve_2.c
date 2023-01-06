@@ -404,7 +404,7 @@ serve_load_status_file(
     return;
   }
 
-  
+
   state->clients_suspended = status.clients_suspended;
   //info("load_status_file: clients_suspended = %d", state->clients_suspended);
   state->testing_suspended = status.testing_suspended;
@@ -950,6 +950,10 @@ serve_get_email_sender(const struct ejudge_cfg *config, const struct contest_des
   return ppwd->pw_name;
 }
 
+enum TelegramReminderConfig {
+    PR_THRESHOLD = 100,  // TODO get from contest config.
+};
+
 void
 serve_check_telegram_reminder(
         const struct ejudge_cfg *config,
@@ -975,7 +979,7 @@ serve_check_telegram_reminder(
 
   struct telegram_reminder_data trdata;
   collect_telegram_reminder(cnts, state, &trdata);
-  if (trdata.pr_total >= 20 || trdata.pr_too_old > 0 || trdata.unans_clars > 0) {
+  if (trdata.pr_total >= PR_THRESHOLD || trdata.pr_too_old > 0 || trdata.unans_clars > 0) {
     const unsigned char *args[10];
     char contest_id_buf[32];
     char pr_total_buf[32];
@@ -988,7 +992,7 @@ serve_check_telegram_reminder(
     snprintf(contest_id_buf, sizeof(contest_id_buf), "%d", cnts->id);
     args[3] = contest_id_buf;
     args[4] = cnts->name;
-    snprintf(pr_total_buf, sizeof(pr_total_buf), "%d", trdata.pr_total);
+    snprintf(pr_total_buf, sizeof(pr_total_buf), "%d", trdata.pr_total >= PR_THRESHOLD ? trdata.pr_total : 0);
     args[5] = pr_total_buf;
     snprintf(pr_too_old_buf, sizeof(pr_too_old_buf), "%d", trdata.pr_too_old);
     args[6] = pr_too_old_buf;

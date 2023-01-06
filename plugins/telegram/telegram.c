@@ -1072,7 +1072,7 @@ queue_packet_handler_telegram_notify(int uid, int argc, char **argv, void *user)
   args[2] = telegram_admin_chat_id
   args[3] = contest_id
   args[4] = contest_name
-  args[5] = pr_total
+  args[5] = pr_total  // 0 if below the threshold
   args[6] = pr_too_old
   args[7] = unans_clars
   args[8] = NULL;
@@ -1114,8 +1114,7 @@ packet_handler_telegram_reminder(int uid, int argc, char **argv, void *user)
         err("invalid unans_clars: %s", argv[7]);
         goto cleanup;
     }
-    if (pr_total < 20 && pr_too_old == 0 && unans_clars == 0) goto cleanup;
-
+    if (pr_total == 0 && pr_too_old == 0 && unans_clars == 0) goto cleanup;  // never happens?
 
     tc = state->conn->vt->chat_fetch(state->conn, chat_id);
     if (!tc) {
@@ -1129,11 +1128,11 @@ packet_handler_telegram_reminder(int uid, int argc, char **argv, void *user)
         FILE *msg_f = open_memstream(&msg_s, &msg_z);
         fprintf(msg_f, "Reminder.\n");
         fprintf(msg_f, "    Contest: %d (%s)\n", contest_id, argv[4]);
-        if (pr_total >= 20) {
+        if (pr_total > 0) {
             fprintf(msg_f, "    Pending Review runs: %d\n", pr_total);
         }
         if (pr_too_old > 0) {
-            fprintf(msg_f, "    Pending Review older than 48h: %d\n", pr_too_old);
+            fprintf(msg_f, "    Pending Review older than 10d: %d\n", pr_too_old);
         }
         if (unans_clars > 0) {
             fprintf(msg_f, "    Unanswered clars older than 48h: %d\n", unans_clars);
