@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS %sconfig 
        (config_key VARCHAR(64) NOT NULL PRIMARY KEY COLLATE utf8_bin,
        config_val VARCHAR(64)
-       ) ENGINE=InnoDB;
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE %slogins
        (user_id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -20,7 +20,7 @@ CREATE TABLE %slogins
        logintime DATETIME DEFAULT NULL,
        pwdtime DATETIME DEFAULT NULL,
        changetime DATETIME DEFAULT NULL
-       ) ENGINE=InnoDB;
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE %scookies
        (cookie VARCHAR(64) NOT NULL PRIMARY KEY,
@@ -38,7 +38,7 @@ CREATE TABLE %scookies
        is_ws TINYINT NOT NULL DEFAULT 0,
        is_job TINYINT NOT NULL DEFAULT 0,
        FOREIGN KEY (user_id) REFERENCES logins (user_id)
-       ) ENGINE=InnoDB;
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE %scntsregs
        (user_id INT UNSIGNED NOT NULL,
@@ -55,60 +55,60 @@ CREATE TABLE %scntsregs
        changetime DATETIME DEFAULT NULL,
        PRIMARY KEY (user_id, contest_id),
        FOREIGN KEY (user_id) REFERENCES logins (user_id)
-       ) ENGINE=InnoDB;
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE %susers
        (user_id INT UNSIGNED NOT NULL,
        contest_id INT UNSIGNED NOT NULL,
        cnts_read_only TINYINT NOT NULL DEFAULT 0,
        instnum INT,
-       username VARCHAR(512),
+       username VARCHAR(512) DEFAULT NULL,
        pwdmethod TINYINT NOT NULL DEFAULT 0,
-       password VARCHAR(128),
+       password VARCHAR(128) DEFAULT NULL,
        pwdtime DATETIME DEFAULT NULL,
        createtime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
        changetime DATETIME DEFAULT NULL,
        logintime DATETIME DEFAULT NULL,
-       inst VARCHAR(512),
-       inst_en VARCHAR (512),
-       instshort VARCHAR (512),
-       instshort_en VARCHAR (512),
-       fac VARCHAR(512),
-       fac_en VARCHAR (512),
-       facshort VARCHAR (512),
-       facshort_en VARCHAR (512),
-       homepage VARCHAR (512),
-       phone VARCHAR (512),
-       city VARCHAR (512),
-       city_en VARCHAR (512),
-       region VARCHAR (512),
-       area VARCHAR (512),
-       zip VARCHAR (512),
-       street VARCHAR (512),
-       country VARCHAR (512),
-       country_en VARCHAR (512),
-       location VARCHAR (512),
-       spelling VARCHAR (512),
-       printer VARCHAR (512),
-       languages VARCHAR (512),
-       exam_id VARCHAR (512),
-       exam_cypher VARCHAR (512),
-       field0 VARCHAR(512),
-       field1 VARCHAR(512),
-       field2 VARCHAR(512),
-       field3 VARCHAR(512),
-       field4 VARCHAR(512),
-       field5 VARCHAR(512),
-       field6 VARCHAR(512),
-       field7 VARCHAR(512),
-       field8 VARCHAR(512),
-       field9 VARCHAR(512),
-       avatar_store VARCHAR(512) DEFAULT NULL,
-       avatar_id VARCHAR(512) DEFAULT NULL,
+       inst VARCHAR(512) DEFAULT NULL,
+       inst_en VARCHAR (512) DEFAULT NULL,
+       instshort VARCHAR (512) DEFAULT NULL,
+       instshort_en VARCHAR (512) DEFAULT NULL,
+       fac VARCHAR(512) DEFAULT NULL,
+       fac_en VARCHAR (512) DEFAULT NULL,
+       facshort VARCHAR (512) DEFAULT NULL,
+       facshort_en VARCHAR (512) DEFAULT NULL,
+       homepage VARCHAR (512) DEFAULT NULL,
+       phone VARCHAR (512) DEFAULT NULL,
+       city VARCHAR (256) DEFAULT NULL,
+       city_en VARCHAR (256) DEFAULT NULL,
+       region VARCHAR (512) DEFAULT NULL,
+       area VARCHAR (512) DEFAULT NULL,
+       zip VARCHAR (256) DEFAULT NULL,
+       street VARCHAR (512) DEFAULT NULL,
+       country VARCHAR (256) DEFAULT NULL,
+       country_en VARCHAR (256) DEFAULT NULL,
+       location VARCHAR (256) DEFAULT NULL,
+       spelling VARCHAR (512) DEFAULT NULL,
+       printer VARCHAR (256) DEFAULT NULL,
+       languages VARCHAR (512) DEFAULT NULL,
+       exam_id VARCHAR (256) DEFAULT NULL,
+       exam_cypher VARCHAR (256) DEFAULT NULL,
+       field0 VARCHAR(256) DEFAULT NULL,
+       field1 VARCHAR(256) DEFAULT NULL,
+       field2 VARCHAR(256) DEFAULT NULL,
+       field3 VARCHAR(256) DEFAULT NULL,
+       field4 VARCHAR(256) DEFAULT NULL,
+       field5 VARCHAR(256) DEFAULT NULL,
+       field6 VARCHAR(256) DEFAULT NULL,
+       field7 VARCHAR(256) DEFAULT NULL,
+       field8 VARCHAR(256) DEFAULT NULL,
+       field9 VARCHAR(256) DEFAULT NULL,
+       avatar_store VARCHAR(256) DEFAULT NULL,
+       avatar_id VARCHAR(256) DEFAULT NULL,
        avatar_suffix VARCHAR(32) DEFAULT NULL,
        PRIMARY KEY (user_id, contest_id),
        FOREIGN KEY (user_id) REFERENCES logins (user_id)
-       ) ENGINE=InnoDB;
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE %smembers
        (
@@ -118,36 +118,36 @@ CREATE TABLE %smembers
        role_id TINYINT NOT NULL,
        createtime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
        changetime DATETIME DEFAULT NULL,
-       firstname VARCHAR(512),
-       firstname_en VARCHAR(512),
-       middlename VARCHAR(512),
-       middlename_en VARCHAR(512),
-       surname VARCHAR(512),
-       surname_en VARCHAR(512),
+       firstname VARCHAR(512) DEFAULT NULL,
+       firstname_en VARCHAR(512) DEFAULT NULL,
+       middlename VARCHAR(512) DEFAULT NULL,
+       middlename_en VARCHAR(512) DEFAULT NULL,
+       surname VARCHAR(512) DEFAULT NULL,
+       surname_en VARCHAR(512) DEFAULT NULL,
        status TINYINT NOT NULL,
        gender TINYINT NOT NULL,
        grade TINYINT NOT NULL,
-       grp VARCHAR(512),
-       grp_en VARCHAR(512),
-       occupation VARCHAR(512),
-       occupation_en VARCHAR(512),
-       discipline VARCHAR(512),
-       email VARCHAR(512),
-       homepage VARCHAR(512),
-       phone VARCHAR(512),
-       inst VARCHAR(512),
-       inst_en VARCHAR(512),
-       instshort VARCHAR(512),
-       instshort_en VARCHAR(512),
-       fac VARCHAR(512),
-       fac_en VARCHAR(512),
-       facshort VARCHAR(512),
-       facshort_en VARCHAR(512),
+       grp VARCHAR(512) DEFAULT NULL,
+       grp_en VARCHAR(512) DEFAULT NULL,
+       occupation VARCHAR(512) DEFAULT NULL,
+       occupation_en VARCHAR(512) DEFAULT NULL,
+       discipline VARCHAR(512) DEFAULT NULL,
+       email VARCHAR(512) DEFAULT NULL,
+       homepage VARCHAR(512) DEFAULT NULL,
+       phone VARCHAR(512) DEFAULT NULL,
+       inst VARCHAR(512) DEFAULT NULL,
+       inst_en VARCHAR(512) DEFAULT NULL,
+       instshort VARCHAR(512) DEFAULT NULL,
+       instshort_en VARCHAR(512) DEFAULT NULL,
+       fac VARCHAR(512) DEFAULT NULL,
+       fac_en VARCHAR(512) DEFAULT NULL,
+       facshort VARCHAR(512) DEFAULT NULL,
+       facshort_en VARCHAR(512) DEFAULT NULL,
        birth_date DATE DEFAULT NULL,
        entry_date DATE DEFAULT NULL,
        graduation_date DATE DEFAULT NULL,
        FOREIGN KEY (user_id) REFERENCES logins (user_id)
-       ) ENGINE=InnoDB;
+       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE %sejgroups
 (
@@ -158,7 +158,7 @@ CREATE TABLE %sejgroups
     create_time DATETIME NOT NULL,
     last_change_time DATETIME DEFAULT NULL,
     FOREIGN KEY (created_by) REFERENCES logins(user_id)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE %sgroupmembers
 (
@@ -168,7 +168,7 @@ CREATE TABLE %sgroupmembers
     PRIMARY KEY (group_id, user_id),
     FOREIGN KEY g(group_id) REFERENCES ejgroups(group_id),
     FOREIGN KEY u(user_id) REFERENCES logins(user_id)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 CREATE TABLE %sapikeys
 (
@@ -183,7 +183,7 @@ CREATE TABLE %sapikeys
     all_contests TINYINT NOT NULL DEFAULT 0,
     role_id TINYINT NOT NULL DEFAULT 0,
     FOREIGN KEY apikeys_user_id_fk(user_id) REFERENCES logins(user_id)
-) ENGINE=InnoDB;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 ALTER TABLE %scntsregs ADD INDEX cntsregs_user_id_idx (user_id),
                        ADD INDEX cntsregs_contest_id_idx (contest_id);
@@ -195,4 +195,4 @@ ALTER TABLE %smembers  ADD INDEX members_user_id_idx (user_id),
 ALTER TABLE %sgroupmembers ADD INDEX groupmembers_group_id_idx (group_id),
                            ADD INDEX groupmembers_user_id_idx (user_id);
 
-INSERT INTO %sconfig VALUES ('version', '16');
+INSERT INTO %sconfig VALUES ('version', '25');

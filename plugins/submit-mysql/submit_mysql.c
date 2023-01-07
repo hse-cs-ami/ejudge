@@ -1,6 +1,6 @@
 /* -*- mode: c; c-basic-offset: 4 -*- */
 
-/* Copyright (C) 2022 Alexander Chernov <cher@ejudge.ru> */
+/* Copyright (C) 2022-2023 Alexander Chernov <cher@ejudge.ru> */
 
 /*
  * This program is free software; you can redistribute it and/or modify
@@ -24,6 +24,8 @@
 #include "ejudge/xml_utils.h"
 
 #include <string.h>
+
+#define SUBMIT_DB_VERSION 2
 
 struct submit_mysql_data
 {
@@ -105,7 +107,7 @@ static const char create_query[] =
 "    FOREIGN KEY s_source_id_fk(source_id) REFERENCES `%sstorage`(serial_id),\n"
 "    FOREIGN KEY s_input_id_fk(input_id) REFERENCES `%sstorage`(serial_id),\n"
 "    FOREIGN KEY s_protocol_id_fk(protocol_id) REFERENCES `%sstorage`(serial_id)\n"
-") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n";
+") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;\n";
 
 static int
 create_database(
@@ -122,7 +124,7 @@ create_database(
                           md->table_prefix) < 0)
         db_error_fail(md);
 
-    if (mi->simple_fquery(md, "INSERT INTO %sconfig VALUES ('submit_version', '%d') ;", md->table_prefix, 1) < 0)
+    if (mi->simple_fquery(md, "INSERT INTO %sconfig VALUES ('submit_version', '%d') ;", md->table_prefix, SUBMIT_DB_VERSION) < 0)
         db_error_fail(md);
 
     smd->is_db_checked = 1;
@@ -156,14 +158,20 @@ check_database(
     if (!md->row[0] || mi->parse_int(md, md->row[0], &submit_version) < 0)
         db_error_inv_value_fail(md, "config_val");
     mi->free_res(md);
-    if (submit_version < 1) {
+    if (submit_version < 1 || submit_version > SUBMIT_DB_VERSION) {
         err("submit_version == %d is not supported", submit_version);
         goto fail;
     }
 
     while (submit_version >= 0) {
         switch (submit_version) {
-        default:
+        case 1:
+            if (mi->simple_fquery(md, "ALTER TABLE %ssubmits ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ;", md->table_prefix) < 0)
+                goto fail;
+            if (mi->simple_fquery(md, "ALTER TABLE %ssubmits MODIFY COLUMN uuid CHAR(40) NOT NULL, MODIFY COLUMN prob_uuid VARCHAR(40) DEFAULT NULL, MODIFY COLUMN ip VARCHAR(64) DEFAULT NULL, MODIFY COLUMN judge_uuid VARCHAR(40) DEFAULT NULL ;", md->table_prefix) < 0)
+                goto fail;
+            break;
+        case SUBMIT_DB_VERSION:
             submit_version = -1;
             break;
         }

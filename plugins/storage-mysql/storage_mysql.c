@@ -1,6 +1,6 @@
 /* -*- mode: c; c-basic-offset: 4 -*- */
 
-/* Copyright (C) 2022 Alexander Chernov <cher@ejudge.ru> */
+/* Copyright (C) 2022-2023 Alexander Chernov <cher@ejudge.ru> */
 
 /*
  * This program is free software; you can redistribute it and/or modify
@@ -23,6 +23,8 @@
 #include "ejudge/sha256utils.h"
 #include "ejudge/xalloc.h"
 #include "ejudge/errlog.h"
+
+#define STORAGE_DB_VERSION 2
 
 struct storage_mysql_data
 {
@@ -87,7 +89,7 @@ static const char create_query[] =
 "    content MEDIUMBLOB DEFAULT NULL,\n"
 "    UNIQUE KEY st_random_k(random_key),\n"
 "    UNIQUE KEY st_sha256_k(sha256)\n"
-") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n";
+") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;\n";
 
 static int
 create_database(
@@ -100,7 +102,7 @@ create_database(
                           md->table_prefix) < 0)
         db_error_fail(md);
 
-    if (mi->simple_fquery(md, "INSERT INTO %sconfig VALUES ('storage_version', '%d') ;", md->table_prefix, 1) < 0)
+    if (mi->simple_fquery(md, "INSERT INTO %sconfig VALUES ('storage_version', '%d') ;", md->table_prefix, STORAGE_DB_VERSION) < 0)
         db_error_fail(md);
 
     smd->is_db_checked = 1;
@@ -134,14 +136,20 @@ check_database(
     if (!md->row[0] || mi->parse_int(md, md->row[0], &storage_version) < 0)
         db_error_inv_value_fail(md, "config_val");
     mi->free_res(md);
-    if (storage_version < 1) {
+    if (storage_version < 1 || storage_version > STORAGE_DB_VERSION) {
         err("storage_version == %d is not supported", storage_version);
         goto fail;
     }
 
     while (storage_version >= 0) {
         switch (storage_version) {
-        default:
+        case 1:
+            if (mi->simple_fquery(md, "ALTER TABLE %sstorage ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ;", md->table_prefix) < 0)
+                goto fail;
+            if (mi->simple_fquery(md, "ALTER TABLE %sstorage MODIFY COLUMN random_key CHAR(64) NOT NULL, MODIFY COLUMN sha256 CHAR(64) NOT NULL ;", md->table_prefix) < 0)
+                goto fail;
+            break;
+        case STORAGE_DB_VERSION:
             storage_version = -1;
             break;
         }

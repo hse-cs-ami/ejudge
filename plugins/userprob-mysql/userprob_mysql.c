@@ -1,6 +1,6 @@
 /* -*- mode: c; c-basic-offset: 4 -*- */
 
-/* Copyright (C) 2022 Alexander Chernov <cher@ejudge.ru> */
+/* Copyright (C) 2022-2023 Alexander Chernov <cher@ejudge.ru> */
 
 /*
  * This program is free software; you can redistribute it and/or modify
@@ -22,6 +22,8 @@
 #include "ejudge/base64.h"
 #include "ejudge/xalloc.h"
 #include "ejudge/errlog.h"
+
+#define USERPROB_DB_VERSION 2
 
 struct userprob_mysql_data
 {
@@ -98,7 +100,7 @@ static const char create_query[] =
 "    KEY up_user_id_idx(user_id),\n"
 "    KEY up_cu_ids_idx(contest_id,user_id),\n"
 "    FOREIGN KEY up_user_id_fk(user_id) REFERENCES %slogins(user_id)\n"
-") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n";
+") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;\n";
 
 static int
 create_database(
@@ -111,7 +113,7 @@ create_database(
                           md->table_prefix, md->table_prefix) < 0)
         db_error_fail(md);
 
-    if (mi->simple_fquery(md, "INSERT INTO %sconfig VALUES ('userprob_version', '%d') ;", md->table_prefix, 1) < 0)
+    if (mi->simple_fquery(md, "INSERT INTO %sconfig VALUES ('userprob_version', '%d') ;", md->table_prefix, USERPROB_DB_VERSION) < 0)
         db_error_fail(md);
 
     umd->is_db_checked = 1;
@@ -151,14 +153,20 @@ check_database(
     if (!md->row[0] || mi->parse_int(md, md->row[0], &userprob_version) < 0)
         db_error_inv_value_fail(md, "config_val");
     mi->free_res(md);
-    if (userprob_version < 1) {
+    if (userprob_version < 1 || userprob_version > USERPROB_DB_VERSION) {
         err("userprob_version == %d is not supported", userprob_version);
         goto fail;
     }
 
     while (userprob_version >= 0) {
         switch (userprob_version) {
-        default:
+        case 1:
+            if (mi->simple_fquery(md, "ALTER TABLE %suserprobs ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ;", md->table_prefix) < 0)
+                goto fail;
+            if (mi->simple_fquery(md, "ALTER TABLE %suserprobs MODIFY COLUMN lang_name VARCHAR(64) DEFAULT NULL, MODIFY COLUMN hook_id CHAR(64) NOT NULL, MODIFY COLUMN gitlab_token VARCHAR(64) DEFAULT NULL, MODIFY COLUMN vcs_type VARCHAR(16) DEFAULT NULL, MODIFY COLUMN vcs_url VARCHAR(1024) DEFAULT NULL, MODIFY COLUMN vcs_subdir VARCHAR(1024) DEFAULT NULL, MODIFY COLUMN vcs_branch_spec VARCHAR(1024) DEFAULT NULL, MODIFY COLUMN ssh_private_key VARCHAR(1024) DEFAULT NULL, MODIFY COLUMN last_event VARCHAR(128) DEFAULT NULL, MODIFY COLUMN last_revision VARCHAR(128) DEFAULT NULL, MODIFY COLUMN message VARCHAR(1024) DEFAULT NULL ;", md->table_prefix) < 0)
+                goto fail;
+            break;
+        case USERPROB_DB_VERSION:
             userprob_version = -1;
             break;
         }

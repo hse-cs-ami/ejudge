@@ -1,6 +1,6 @@
 /* -*- mode: c; c-basic-offset: 4 -*- */
 
-/* Copyright (C) 2022 Alexander Chernov <cher@ejudge.ru> */
+/* Copyright (C) 2022-2023 Alexander Chernov <cher@ejudge.ru> */
 
 /*
  * This program is free software; you can redistribute it and/or modify
@@ -28,6 +28,8 @@
 #include "ejudge/errlog.h"
 
 #include <stdio.h>
+
+#define TELEGRAM_DB_VERSION 4
 
 static struct generic_conn *
 free_func(struct generic_conn *gc)
@@ -67,12 +69,12 @@ prepare_func(
 static const char create_query_1[] =
 "CREATE TABLE %stelegram_bots (\n"
 "    id CHAR(64) NOT NULL PRIMARY KEY,\n"
-"    update_id INT(18) NOT NULL DEFAULT 0\n"
-") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n";
+"    update_id BIGINT NOT NULL DEFAULT 0\n"
+") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;\n";
 
 static const char create_query_2[] =
 "CREATE TABLE %stelegram_tokens (\n"
-"    id INT(18) NOT NULL PRIMARY KEY AUTO_INCREMENT,\n"
+"    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n"
 "    bot_id CHAR(64) NOT NULL,\n"
 "    user_id INT UNSIGNED NOT NULL,\n"
 "    user_login VARCHAR(64) DEFAULT NULL,\n"
@@ -87,50 +89,50 @@ static const char create_query_2[] =
 "    KEY tt_contest_user_k(contest_id,user_id),\n"
 "    UNIQUE KEY tt_token_k(token),\n"
 "    FOREIGN KEY tt_user_id_fk(user_id) REFERENCES %slogins(user_id)\n"
-") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n";
+") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;\n";
 
 static const char create_query_3[] =
 "CREATE TABLE %stelegram_users (\n"
-"    id INT(18) NOT NULL PRIMARY KEY,\n"
+"    id BIGINT NOT NULL PRIMARY KEY,\n"
 "    username VARCHAR(512) DEFAULT NULL,\n"
 "    first_name VARCHAR(512) DEFAULT NULL,\n"
 "    last_name VARCHAR(512) DEFAULT NULL\n"
-") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n";
+") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;\n";
 
 static const char create_query_4[] =
 "CREATE TABLE %stelegram_chats (\n"
-"    id INT(18) NOT NULL PRIMARY KEY,\n"
+"    id BIGINT NOT NULL PRIMARY KEY,\n"
 "    chat_type VARCHAR(64) DEFAULT NULL,\n"
 "    title VARCHAR(512) DEFAULT NULL,\n"
 "    username VARCHAR(512) DEFAULT NULL,\n"
 "    first_name VARCHAR(512) DEFAULT NULL,\n"
 "    last_name VARCHAR(512) DEFAULT NULL\n"
-") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n";
+") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;\n";
 
 static const char create_query_5[] =
 "CREATE TABLE %stelegram_chat_states (\n"
-"    id INT(18) NOT NULL PRIMARY KEY,\n"
+"    id BIGINT NOT NULL PRIMARY KEY,\n"
 "    command VARCHAR(64) DEFAULT NULL,\n"
 "    token VARCHAR(64) DEFAULT NULL,\n"
 "    state INT NOT NULL DEFAULT 0,\n"
 "    review_flag INT NOT NULL DEFAULT 0,\n"
 "    reply_flag INT NOT NULL DEFAULT 0\n"
-") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n";
+") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;\n";
 
 static const char create_query_6[] =
 "CREATE TABLE %stelegram_subscriptions (\n"
-"    id INT(18) NOT NULL PRIMARY KEY AUTO_INCREMENT,\n"
+"    id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n"
 "    bot_id CHAR(64) NOT NULL,\n"
 "    user_id INT UNSIGNED NOT NULL,\n"
 "    contest_id INT NOT NULL DEFAULT 0,\n"
 "    review_flag INT NOT NULL DEFAULT 0,\n"
 "    reply_flag INT NOT NULL DEFAULT 0,\n"
-"    chat_id INT(18) NOT NULL DEFAULT 0,\n"
+"    chat_id BIGINT NOT NULL DEFAULT 0,\n"
 "    KEY ts_bot_id_k(bot_id),\n"
 "    KEY ts_contest_id_k(contest_id),\n"
 "    UNIQUE KEY ts_unique_k(bot_id,user_id,contest_id),\n"
 "    FOREIGN KEY ts_user_id_fk(user_id) REFERENCES %slogins(user_id)\n"
-") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n";
+") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;\n";
 
 static int
 create_database(
@@ -161,7 +163,7 @@ create_database(
                           md->table_prefix) < 0)
         db_error_fail(md);
 
-    if (mi->simple_fquery(md, "INSERT INTO %sconfig VALUES ('telegram_version', '%d') ;", md->table_prefix, 1) < 0)
+    if (mi->simple_fquery(md, "INSERT INTO %sconfig VALUES ('telegram_version', '%d') ;", md->table_prefix, TELEGRAM_DB_VERSION) < 0)
         db_error_fail(md);
 
     mi->unlock(md);
@@ -207,6 +209,64 @@ check_database(
 
     while (telegram_version >= 0) {
         switch (telegram_version) {
+        case 1:
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_bots MODIFY COLUMN update_id BIGINT NOT NULL DEFAULT 0 ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_tokens MODIFY COLUMN id INT(18) NOT NULL ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_tokens DROP PRIMARY KEY ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_tokens MODIFY COLUMN id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_users DROP PRIMARY KEY ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_users MODIFY COLUMN id BIGINT NOT NULL PRIMARY KEY ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_chats DROP PRIMARY KEY ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_chats MODIFY COLUMN id BIGINT NOT NULL PRIMARY KEY ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_chat_states DROP PRIMARY KEY ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_chat_states MODIFY COLUMN id BIGINT NOT NULL PRIMARY KEY ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_subscriptions MODIFY COLUMN id INT(18) NOT NULL ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_subscriptions DROP PRIMARY KEY ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_subscriptions MODIFY COLUMN id BIGINT NOT NULL PRIMARY KEY AUTO_INCREMENT ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_subscriptions MODIFY COLUMN chat_id BIGINT NOT NULL DEFAULT 0 ;", md->table_prefix) < 0)
+                return -1;
+            break;
+        case 2:
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_bots DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_tokens DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_users DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_chats DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_chat_states DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_subscriptions DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;", md->table_prefix) < 0)
+                return -1;
+            break;
+        case 3:
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_bots MODIFY COLUMN  id CHAR(64) NOT NULL;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_tokens MODIFY COLUMN bot_id CHAR(64) NOT NULL, MODIFY COLUMN user_login VARCHAR(64) DEFAULT NULL, MODIFY COLUMN user_name VARCHAR(512) DEFAULT NULL, MODIFY COLUMN token CHAR(64) NOT NULL, MODIFY COLUMN contest_name VARCHAR(512) DEFAULT NULL ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_users MODIFY COLUMN username VARCHAR(512) DEFAULT NULL, MODIFY COLUMN first_name VARCHAR(512) DEFAULT NULL, MODIFY COLUMN last_name VARCHAR(512) DEFAULT NULL ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_chats MODIFY COLUMN chat_type VARCHAR(64) DEFAULT NULL, MODIFY COLUMN title VARCHAR(512) DEFAULT NULL, MODIFY COLUMN username VARCHAR(512) DEFAULT NULL, MODIFY COLUMN first_name VARCHAR(512) DEFAULT NULL, MODIFY COLUMN last_name VARCHAR(512) DEFAULT NULL ;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_chat_states MODIFY COLUMN  command VARCHAR(64) DEFAULT NULL, MODIFY COLUMN token VARCHAR(64) DEFAULT NULL;", md->table_prefix) < 0)
+                return -1;
+            if (mi->simple_fquery(md, "ALTER TABLE %stelegram_subscriptions MODIFY COLUMN bot_id CHAR(64) NOT NULL ;", md->table_prefix) < 0)
+                return -1;
+            break;
         default:
             telegram_version = -1;
             break;
