@@ -67,12 +67,12 @@ prepare_func(
 static const char create_query_1[] =
 "CREATE TABLE %stelegram_bots (\n"
 "    id CHAR(64) NOT NULL PRIMARY KEY,\n"
-"    update_id INT(18) NOT NULL DEFAULT 0\n"
+"    update_id INT NOT NULL DEFAULT 0\n"
 ") ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;\n";
 
 static const char create_query_2[] =
 "CREATE TABLE %stelegram_tokens (\n"
-"    id INT(18) NOT NULL PRIMARY KEY AUTO_INCREMENT,\n"
+"    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n"
 "    bot_id CHAR(64) NOT NULL,\n"
 "    user_id INT UNSIGNED NOT NULL,\n"
 "    user_login VARCHAR(64) DEFAULT NULL,\n"
@@ -91,7 +91,7 @@ static const char create_query_2[] =
 
 static const char create_query_3[] =
 "CREATE TABLE %stelegram_users (\n"
-"    id INT(18) NOT NULL PRIMARY KEY,\n"
+"    id BIGINT NOT NULL PRIMARY KEY,\n"
 "    username VARCHAR(512) DEFAULT NULL,\n"
 "    first_name VARCHAR(512) DEFAULT NULL,\n"
 "    last_name VARCHAR(512) DEFAULT NULL\n"
@@ -99,7 +99,7 @@ static const char create_query_3[] =
 
 static const char create_query_4[] =
 "CREATE TABLE %stelegram_chats (\n"
-"    id INT(18) NOT NULL PRIMARY KEY,\n"
+"    id BIGINT NOT NULL PRIMARY KEY,\n"
 "    chat_type VARCHAR(64) DEFAULT NULL,\n"
 "    title VARCHAR(512) DEFAULT NULL,\n"
 "    username VARCHAR(512) DEFAULT NULL,\n"
@@ -109,7 +109,7 @@ static const char create_query_4[] =
 
 static const char create_query_5[] =
 "CREATE TABLE %stelegram_chat_states (\n"
-"    id INT(18) NOT NULL PRIMARY KEY,\n"
+"    id BIGINT NOT NULL PRIMARY KEY,\n"
 "    command VARCHAR(64) DEFAULT NULL,\n"
 "    token VARCHAR(64) DEFAULT NULL,\n"
 "    state INT NOT NULL DEFAULT 0,\n"
@@ -119,13 +119,13 @@ static const char create_query_5[] =
 
 static const char create_query_6[] =
 "CREATE TABLE %stelegram_subscriptions (\n"
-"    id INT(18) NOT NULL PRIMARY KEY AUTO_INCREMENT,\n"
+"    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,\n"
 "    bot_id CHAR(64) NOT NULL,\n"
 "    user_id INT UNSIGNED NOT NULL,\n"
 "    contest_id INT NOT NULL DEFAULT 0,\n"
 "    review_flag INT NOT NULL DEFAULT 0,\n"
 "    reply_flag INT NOT NULL DEFAULT 0,\n"
-"    chat_id INT(18) NOT NULL DEFAULT 0,\n"
+"    chat_id BIGINT NOT NULL DEFAULT 0,\n"
 "    KEY ts_bot_id_k(bot_id),\n"
 "    KEY ts_contest_id_k(contest_id),\n"
 "    UNIQUE KEY ts_unique_k(bot_id,user_id,contest_id),\n"
