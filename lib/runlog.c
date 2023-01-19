@@ -3055,6 +3055,7 @@ void
 run_rebuild_user_run_index(runlog_state_t state, int user_id)
 {
   struct user_run_header_info *urhi = run_get_user_run_header(state, user_id, NULL);
+  if (!urhi) return;
   urhi->run_id_valid = 1;
   urhi->run_id_first = -1;
   urhi->run_id_last = -1;
