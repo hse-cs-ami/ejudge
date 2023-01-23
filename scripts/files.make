@@ -134,6 +134,8 @@ SCRIPTS_IN = \
  swift.in\
  custom-version.in\
  custom.in\
+ qemu-version.in\
+ qemu.in\
  runvg.in\
  runvg2.in\
  runjava.in\
@@ -142,7 +144,7 @@ SCRIPTS_IN = \
  runmono2.in\
  runperl.in\
  rundotnet.in\
- rundotnet2.in
+ rundotnet2.in\
 
 POLICIES = \
  fileio.policy \
