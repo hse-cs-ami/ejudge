@@ -1,0 +1,36 @@
+#!/bin/bash -e
+# $Id$
+# Copyright (c) 2008 Alexander Chernov <cher@ejudge.ru>
+
+# Usage: qemu <input> <output>
+
+# using EJUDGE_FLAGS we may pass additional flags
+
+LANG_CONFIG_DIR="@lang_config_dir@"
+[ "${EJUDGE_LANG_CONFIG}" = "" ] && EJUDGE_LANG_CONFIG="${LANG_CONFIG_DIR}/qemu.cfg"
+
+if [ -f "${EJUDGE_LANG_CONFIG}" ]
+then
+  . "${EJUDGE_LANG_CONFIG}"
+else
+  version="unknown"
+  QEMUPATH="/usr/bin/qemu-system-i386"
+fi
+
+if [ x"${version}" = x ]
+then
+  echo "This language is not supported." >&2
+  exit 1
+fi
+
+[ x"${EJUDGE_ADD_FLAGS}" != x ] && EJUDGE_FLAGS="${EJUDGE_FLAGS} ${EJUDGE_ADD_FLAGS}"
+
+eval $EJUDGE_FLAGS
+
+mv $1 $submission_file
+cp -rs $source_path/* ./
+make ejudge.sh
+
+mv ejudge.sh $2
+chmod +x $2
+exit 0
