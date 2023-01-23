@@ -128,6 +128,8 @@ SCRIPTS_IN = \
  dotnet-vb.in\
  swift-version.in\
  swift.in\
+ qemu-version.in\
+ qemu.in\
  runvg.in\
  runvg2.in\
  runjava.in\
@@ -136,7 +138,7 @@ SCRIPTS_IN = \
  runmono2.in\
  runperl.in\
  rundotnet.in\
- rundotnet2.in
+ rundotnet2.in\
 
 POLICIES = \
  fileio.policy \

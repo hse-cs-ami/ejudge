@@ -1,0 +1,84 @@
+#!/bin/sh
+
+LANG_CONFIG_DIR="@lang_config_dir@"
+
+common_config() {
+  echo 'long_name="QEMU-i386"'
+  echo 'src_sfx=".c"'
+  echo 'arch="linux-shared"'
+}
+
+failure() {
+  echo 'version='
+  echo 'arg="'"${arg}"'"'
+  common_config
+  echo 'QEMUPATH=/bin/false'
+  [ "${verbose}" = 1 ] && echo "no" >&2
+  exit 1
+}
+
+unset LANG
+unset LC_ALL
+unset LC_MESSAGES
+unset LANGUAGE
+
+if [ x"$1" = x-v ]
+then
+  verbose=1
+  shift
+fi
+
+# recheck the language
+if [ x"$1" = x-r ]
+then
+  arg="$2"
+  [ x"$2" != x ] && qemu="$2"
+  [ "${qemu}" = "" ] && qemu="qemu-system-i386"
+
+  [ "${verbose}" = 1 ] && echo -n "checking whether QEMU is available..." >&2
+  "${qemu}" --version >/dev/null 2>&1 || failure
+  version=`"${qemu}" --version 2>&1 | grep version | gawk '{ print $4; }'` || failure
+  [ "${version}" != "" ] || failure
+  QEMUPATH=`which "${qemu}"` || failure
+  [ "${QEMUPATH}" != "" ] || failure
+
+  echo 'version="'"${version}"'"'
+  echo 'arg="'"${arg}"'"'
+  common_config
+  echo 'QEMUPATH="'"${QEMUPATH}"'"'
+  [ "${verbose}" = 1 ] && echo "yes, ${QEMUPATH}, ${version}" >&2
+  exit 0
+fi
+
+if [ x"$1" = x-l ]
+then
+  echo "QEMU emulator for i386"
+  exit 0
+fi
+
+[ "${EJUDGE_LANG_CONFIG}" = "" ] && EJUDGE_LANG_CONFIG="${LANG_CONFIG_DIR}/qemu.cfg"
+
+if [ -f "${EJUDGE_LANG_CONFIG}" ]
+then
+  . "${EJUDGE_LANG_CONFIG}"
+else
+  QEMUPATH="/usr/bin/qemu-system-i386"
+fi
+
+if [ x"${QEMUPATH}" = x -o x"${QEMUPATH}" = x/bin/false ]
+then
+  echo "This language is not supported." >&2
+  exit 1
+fi
+
+if [ x"$1" = x-p ]
+then
+    echo "${QEMUPATH}"
+    exit 0
+fi
+
+"${QEMUPATH}" --version 2>/dev/null >/dev/null || exit 1
+
+[ x"$1" = x-f ] && echo -n "qemu-system-i386 "
+
+"${QEMUPATH}" --version 2>&1 | grep version | gawk '{ print $4; }'
