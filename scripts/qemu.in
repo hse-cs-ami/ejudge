@@ -27,7 +27,7 @@ fi
 
 eval $EJUDGE_FLAGS
 
-mv $1 $submission_file
+cp $1 $submission_file
 cp -rs $source_path/* ./
 make ejudge.sh
 
