@@ -630,10 +630,12 @@ process_kirov_run(
 
                 if (!cell->marked_flag || prob->ignore_unmarked <= 0 || pe->is_marked) {
                     cell->marked_flag = pe->is_marked;
-                    if (!cell->full_sol) ++cell->sol_att;
+                    // OKs shouldn't be considered as "attempts before successful solution"
+                    // Maybe this line is for ignore_unmarked mode? Are unmarked OKs unsuccessful?
+                    // if (!cell->full_sol) ++cell->sol_att;
                     int score = calc_kirov_score(0, 0, row->start_time,
                                                  pg->separate_user_score, sii->user_mode, token_flags,
-                                                 pe, prob, cell->att_num,
+                                                 pe, prob, cell->sol_att,
                                                  cell->disq_num, cell->ce_num,
                                                  cell->full_sol?RUN_TOO_MANY:col->succ_att,
                                                  0, 0, effective_time);
@@ -694,10 +696,11 @@ process_kirov_run(
             } else if (run_status == RUN_PARTIAL) {
                 if (!cell->marked_flag || prob->ignore_unmarked <= 0 || pe->is_marked) {
                     cell->marked_flag = pe->is_marked;
-                    if (!cell->full_sol) ++cell->sol_att;
+                    // Always increase sol_att. Penalty is applied to all subsequent runs, even if there was a previous OK.
+                    ++cell->sol_att;
                     int score = calc_kirov_score(0, 0, row->start_time,
                                                  pg->separate_user_score, sii->user_mode, token_flags,
-                                                 pe, prob, cell->att_num,
+                                                 pe, prob, cell->sol_att,
                                                  cell->disq_num, cell->ce_num, RUN_TOO_MANY, 0, 0,
                                                  effective_time);
                     if (prob->score_latest > 0 || score > cell->score) {
@@ -711,10 +714,10 @@ process_kirov_run(
                     pg->last_submit_run = run_id;
                 }
             } else if (run_status == RUN_WRONG_ANSWER_ERR && prob->type != 0) {
-                if (!cell->full_sol) ++cell->sol_att;
+                ++cell->sol_att;
                 int score = calc_kirov_score(0, 0, row->start_time,
                                              pg->separate_user_score, sii->user_mode, token_flags,
-                                             pe, prob, cell->att_num,
+                                             pe, prob, cell->sol_att,
                                              cell->disq_num, cell->ce_num, RUN_TOO_MANY, 0, 0,
                                              effective_time);
                 if (prob->score_latest > 0 || score > cell->score) {
@@ -730,12 +733,11 @@ process_kirov_run(
                     } else {
                         ++cell->att_num;
                     }
-                    if (!cell->full_sol) ++cell->sol_att;
+                    ++cell->sol_att;
                     if (!cell->full_sol) ++col->tot_att;
                     pg->last_submit_run = run_id;
                 }
             } else if (run_status == RUN_DISQUALIFIED) {
-                if (!cell->full_sol) ++cell->sol_att;
                 ++cell->disq_num;
                 ++pg->total_disqualified;
             } else if (run_status == RUN_PENDING) {
