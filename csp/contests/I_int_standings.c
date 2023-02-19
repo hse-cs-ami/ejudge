@@ -731,9 +731,9 @@ process_kirov_run(
                     if (prob->compile_error_penalty >= 0) {
                         ++cell->ce_num;
                     } else {
-                        ++cell->att_num;
+                        ++cell->sol_att;
                     }
-                    ++cell->sol_att;
+                    ++cell->att_num;
                     if (!cell->full_sol) ++col->tot_att;
                     pg->last_submit_run = run_id;
                 }

@@ -1904,9 +1904,9 @@ do_write_kirov_standings(
             if (prob->compile_error_penalty != -1) {
               ++ce_num[up_ind];
             } else {
-              att_num[up_ind]++;
+              sol_att[up_ind]++;
             }
-            sol_att[up_ind]++;
+            att_num[up_ind]++;
             if (!full_sol[up_ind]) tot_att[pind]++;
             last_submit_run = k;
           }
