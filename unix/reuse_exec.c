@@ -87,6 +87,7 @@ struct tTask
   int    max_time;              /* maximal allowed time */
   int    max_time_millis;       /* maximal allowed time in milliseconds */
   int    max_real_time;         /* maximal allowed realtime */
+  int    max_real_time_millis;  /* maximal allowed realtime in milliseconds */
   int    was_timeout;           /* was the timeout happened? */
   int    was_real_timeout;      /* was the real time limit exceeded? */
   int    was_memory_limit;      /* was the memory limit happened? */
@@ -899,6 +900,7 @@ task_SetMaxRealTime(tTask *tsk, int time)
   if (tsk->state != TSK_STOPPED) return 0;
 
   tsk->max_real_time = time;
+  tsk->max_real_time_millis = 0;
   return 0;
 }
 
@@ -911,6 +913,7 @@ task_SetMaxRealTimeMillis(tTask *tsk, int time_ms)
   if (tsk->state != TSK_STOPPED) return 0;
 
   tsk->max_real_time = (time_ms + 999) / 1000;
+  tsk->max_real_time_millis = time_ms;
   return 0;
 }
 
@@ -1741,6 +1744,7 @@ task_StartContainer(tTask *tsk)
     fprintf(spec_f, "lt%lld", max_time_ms);
   }
   if (tsk->max_real_time > 0) {
+    // TODO max_real_time_millis
     fprintf(spec_f, "lr%lld", tsk->max_real_time * 1000LL);
   }
 
@@ -2759,7 +2763,12 @@ task_NewWait(tTask *tsk)
   gettimeofday(&cur_time, NULL);
   rt_timeout.tv_sec = 0;
   rt_timeout.tv_usec = 0;
-  if (tsk->max_real_time > 0) {
+
+  if (tsk->max_real_time_millis > 0) {
+    long long rt_timeout_usec = cur_time.tv_sec * 1000000 + cur_time.tv_usec + tsk->max_real_time_millis * 1000;
+    rt_timeout.tv_sec = rt_timeout_usec / 1000000;
+    rt_timeout.tv_usec = rt_timeout_usec % 1000000;
+  } else if (tsk->max_real_time > 0) {
     rt_timeout = cur_time;
     rt_timeout.tv_sec += tsk->max_real_time;
   }
@@ -2796,7 +2805,7 @@ task_NewWait(tTask *tsk)
       return tsk;
     }
 
-    if (tsk->max_real_time > 0) {
+    if (tsk->max_real_time > 0 || tsk->max_real_time_millis > 0) {
       gettimeofday(&cur_time, NULL);
       if (cur_time.tv_sec > rt_timeout.tv_sec
           || (cur_time.tv_sec == rt_timeout.tv_sec && cur_time.tv_usec >= rt_timeout.tv_usec)) {
